@@ -21,4 +21,11 @@ fn main() {
         "Command failed".to_string()
     };
     println!("{}", &hello);
+    let curr_path = std::env::current_dir()
+        .expect("Failed to get working dir");
+    let dir_path = format!("{}/data", curr_path.display());
+    match std::fs::exists(&dir_path) {
+        Ok(true) => println!("Exists"),
+        _ => std::fs::create_dir(dir_path).expect("Failed"),
+    }
 }
