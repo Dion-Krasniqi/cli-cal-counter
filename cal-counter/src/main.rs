@@ -1,8 +1,8 @@
 use std::process::Command;
 use std::any::type_name_of_val;
+use std::io::prelude::*;
 
-fn main() {
-
+fn main() -> std::io::Result<()> {
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "echo macro"])
@@ -15,6 +15,7 @@ fn main() {
             .output()
             .expect("Failed to execute")
     };
+
     let hello = if let Ok(s) = String::from_utf8(output.stdout) {
         s
     } else {
@@ -24,8 +25,28 @@ fn main() {
     let curr_path = std::env::current_dir()
         .expect("Failed to get working dir");
     let dir_path = format!("{}/data", curr_path.display());
+    let file_path = format!("{}/file.txt", &dir_path);
     match std::fs::exists(&dir_path) {
         Ok(true) => println!("Exists"),
-        _ => std::fs::create_dir(dir_path).expect("Failed"),
-    }
+        _ => { std::fs::create_dir(&dir_path).expect("Failed");
+               std::fs::File::create(&file_path);
+        },
+    };
+    let mut file = std::fs::File::open(&file_path)?; 
+    file.write_all(b"text")?;
+    file.sync_data()?;
+    Ok(())
+    //write_to_file(10, 1, &file);
+}
+
+use std::fs::File;
+pub fn write_to_file(amount: i16, 
+                     mac: u8,
+                     mut file: &File) {
+    /*let macro_txt = match mac {
+        0 => "p",
+        1 => "c",
+        _ => "f",
+    };*/
+    //let bytes = format!("{}_{}", amount, macro_txt);
 }
