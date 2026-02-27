@@ -32,21 +32,25 @@ fn main() -> std::io::Result<()> {
                std::fs::File::create(&file_path);
         },
     };
-    let mut file = std::fs::File::open(&file_path)?; 
-    file.write_all(b"text")?;
-    file.sync_data()?;
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(file_path)?; 
+
+    write_to_file(10, 1, &file);
     Ok(())
-    //write_to_file(10, 1, &file);
 }
 
 use std::fs::File;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
                      mut file: &File) {
-    /*let macro_txt = match mac {
+    let macro_txt = match mac {
         0 => "p",
         1 => "c",
         _ => "f",
-    };*/
-    //let bytes = format!("{}_{}", amount, macro_txt);
+    };
+    let content = format!("{}_{}", amount, macro_txt);
+    file.write_all(content.as_bytes());
 }
