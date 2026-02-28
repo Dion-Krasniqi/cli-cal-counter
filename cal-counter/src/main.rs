@@ -36,16 +36,20 @@ fn main() -> std::io::Result<()> {
         .write(true)
         .append(true)
         .create(true)
-        .open(file_path)?; 
+        .open(&file_path)?; 
 
     write_to_file(10, 1, &file);
+    let bfile = File::open(&file_path)?;
+    read_lines(&bfile);
     Ok(())
 }
 
 use std::fs::File;
+use chrono::Utc;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
                      mut file: &File) {
+    let date = Utc::now();
     let macro_txt = match mac {
         0 => "p",
         1 => "c",
@@ -53,4 +57,13 @@ pub fn write_to_file(amount: i16,
     };
     let content = format!("{}_{}", amount, macro_txt);
     file.write_all(content.as_bytes());
+}
+
+use std::io;
+fn read_lines(file: &File) {
+    let mut reader = io::BufReader::new(file);
+    for line in reader.lines() {
+        let l = line.unwrap();
+        println!("{}", l);
+    }
 }
