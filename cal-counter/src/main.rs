@@ -40,7 +40,7 @@ fn main() -> std::io::Result<()> {
 
     let bfile = File::open(&file_path)?;
     let last_line = read_lines(&bfile);
-    write_to_file(10, 1, &file, &last_line);
+    write_to_file(1, 0, &file, &last_line);
     Ok(())
 }
 
@@ -50,18 +50,40 @@ pub fn write_to_file(amount: i16,
                      mac: u8,
                      mut file: &File,
                      last_line: &String) {
+
     let date = Utc::now().date_naive();
-    if date.to_string() != last_line[0..10] { 
-        let content = format!("\n{}_macros", date.to_string());
-        file.write_all(content.as_bytes());
-        return;
-    }
-    let macro_txt = match mac {
-        0 => "p",
-        1 => "c",
-        _ => "f",
+    let mut p = 0;
+    let mut c = 0;
+    let mut f = 0;
+    match mac {
+        0 => p += amount,
+        1 => c += amount,
+        _ => f += amount,
     };
-    let content = format!("{}_{}", amount, macro_txt);
+    let content: String = if date.to_string() == last_line[0..10] {   
+        let change = match mac {
+            0 => last_line.chars().nth(11).unwrap(),
+            1 => last_line.chars().nth(13).unwrap(),
+            2 => last_line.chars().nth(15).unwrap(),
+            _ => '0',
+        };
+        let digit = change.to_digit(10).unwrap() as i16 + amount;
+        match mac {
+            0 => format!("\n{}p{}{}", date.to_string(), 
+                digit.to_string(), last_line[12..].to_string()),
+            1 => format!("\n{}{}{}", last_line[0..13].to_string(),
+                                 digit.to_string(),
+                                 last_line[14..].to_string()),
+            _ => format!("\n{}{}", last_line[0..15].to_string(),
+                                digit.to_string()),
+        } 
+    } else {
+        format!("\n{}p{}c{}f{}", 
+            date.to_string(), 
+            p.to_string(), 
+            c.to_string(), 
+            f.to_string())
+    }; 
     file.write_all(content.as_bytes());
 }
 
