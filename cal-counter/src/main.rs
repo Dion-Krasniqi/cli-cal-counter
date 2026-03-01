@@ -38,9 +38,9 @@ fn main() -> std::io::Result<()> {
         .create(true)
         .open(&file_path)?; 
 
-    write_to_file(10, 1, &file);
     let bfile = File::open(&file_path)?;
-    read_lines(&bfile);
+    let last_line = read_lines(&bfile);
+    write_to_file(10, 1, &file, &last_line);
     Ok(())
 }
 
@@ -48,8 +48,14 @@ use std::fs::File;
 use chrono::Utc;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
-                     mut file: &File) {
-    let date = Utc::now();
+                     mut file: &File,
+                     last_line: &String) {
+    let date = Utc::now().date_naive();
+    if date.to_string() != last_line[0..10] { 
+        let content = format!("\n{}_macros", date.to_string());
+        file.write_all(content.as_bytes());
+        return;
+    }
     let macro_txt = match mac {
         0 => "p",
         1 => "c",
@@ -60,10 +66,15 @@ pub fn write_to_file(amount: i16,
 }
 
 use std::io;
-fn read_lines(file: &File) {
+fn read_lines(file: &File) -> String {
     let mut reader = io::BufReader::new(file);
-    for line in reader.lines() {
+    /*for line in reader.lines() {
         let l = line.unwrap();
         println!("{}", l);
+    }*/
+    if let Ok(line) = reader.lines().last().unwrap() {
+        println!("{}", &line);
+        return line;
     }
+    "Nothing".to_string()
 }
