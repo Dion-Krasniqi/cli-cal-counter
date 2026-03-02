@@ -37,10 +37,13 @@ fn main() -> std::io::Result<()> {
         .append(true)
         .create(true)
         .open(&file_path)?; 
-
     let bfile = File::open(&file_path)?;
-    let last_line = read_lines(&bfile);
-    write_to_file(1, 0, &file, &last_line);
+    let file_lines = read_lines(&bfile);
+    /*for line in file_lines.lines() {
+        println!("{}", line.unwrap());
+    }*/
+    //let last_line = file_lines.last().unwrap().expect("because");
+    //write_to_file(1, 0, &file, &last_line);
     Ok(())
 }
 
@@ -88,15 +91,11 @@ pub fn write_to_file(amount: i16,
 }
 
 use std::io;
-fn read_lines(file: &File) -> String {
-    let mut reader = io::BufReader::new(file);
-    /*for line in reader.lines() {
+fn read_lines(file: &File)/* -> io::BufReader<&std::fs::File> */{
+    let reader = io::BufReader::new(file);
+    for line in reader.lines() {
         let l = line.unwrap();
         println!("{}", l);
-    }*/
-    if let Ok(line) = reader.lines().last().unwrap() {
-        println!("{}", &line);
-        return line;
     }
-    "Nothing".to_string()
+    //reader
 }
