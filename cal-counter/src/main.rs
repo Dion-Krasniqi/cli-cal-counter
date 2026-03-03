@@ -40,10 +40,7 @@ fn main() -> std::io::Result<()> {
         .open(&file_path)?; 
     let bfile = File::open(&file_path)?;
     let file_lines = read_lines(&bfile);
-    let last_line = file_lines.lines()
-                              .unwrap()
-                              .expect("because");
-    write_to_file(1, 0, &file, &last_line);
+    write_to_file(1, 0, &file, file_lines.lines());
     Ok(())
 }
 
@@ -52,7 +49,7 @@ use chrono::Utc;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
                      mut file: &File,
-                     last_line: &String) {
+                     lines: io::Lines<io::BufReader<&std::fs::File>>) {
 
     let date = Utc::now().date_naive();
     let mut p = 0;
@@ -63,6 +60,11 @@ pub fn write_to_file(amount: i16,
         1 => c += amount,
         _ => f += amount,
     };
+    let mut lines_string = Vec::new();
+    for line in lines.map_while(Result::ok) {
+        lines_string.push(line);    
+    }; 
+    let last_line = lines_string.pop().expect("gyat");
     let content: String = if date.to_string() == last_line[0..10] {   
         let change = match mac {
             0 => last_line.chars().nth(11).unwrap(),
@@ -72,30 +74,29 @@ pub fn write_to_file(amount: i16,
         };
         let digit = change.to_digit(10).unwrap() as i16 + amount;
         match mac {
-            0 => format!("\n{}p{}{}", date.to_string(), 
+            0 => format!("{}p{}{}", date.to_string(), 
                 digit.to_string(), last_line[12..].to_string()),
-            1 => format!("\n{}{}{}", last_line[0..13].to_string(),
+            1 => format!("{}{}{}", last_line[0..13].to_string(),
                                  digit.to_string(),
                                  last_line[14..].to_string()),
-            _ => format!("\n{}{}", last_line[0..15].to_string(),
+            _ => format!("{}{}", last_line[0..15].to_string(),
                                 digit.to_string()),
         } 
     } else {
-        format!("\n{}p{}c{}f{}", 
+        format!("{}p{}c{}f{}", 
             date.to_string(), 
             p.to_string(), 
             c.to_string(), 
             f.to_string())
-    }; 
-    file.write_all(content.as_bytes());
+    };
+    for l in lines_string {
+        file.write(format!("{}\n",l).as_bytes());
+    }
+    file.write(content.as_bytes());
 }
 
 use std::io;
 fn read_lines(file: &File) -> io::BufReader<&std::fs::File> {
     let reader = io::BufReader::new(file);
-    /*for line in reader.lines() {
-        let l = line.unwrap();
-        println!("{}", l);
-    }*/
     reader
 }
