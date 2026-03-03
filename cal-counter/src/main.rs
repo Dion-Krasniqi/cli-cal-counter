@@ -26,6 +26,7 @@ fn main() -> std::io::Result<()> {
         .expect("Failed to get working dir");
     let dir_path = format!("{}/data", curr_path.display());
     let file_path = format!("{}/file.txt", &dir_path);
+    println!("{}", &file_path);
     match std::fs::exists(&dir_path) {
         Ok(true) => println!("Exists"),
         _ => { std::fs::create_dir(&dir_path).expect("Failed");
@@ -39,11 +40,10 @@ fn main() -> std::io::Result<()> {
         .open(&file_path)?; 
     let bfile = File::open(&file_path)?;
     let file_lines = read_lines(&bfile);
-    /*for line in file_lines.lines() {
-        println!("{}", line.unwrap());
-    }*/
-    //let last_line = file_lines.last().unwrap().expect("because");
-    //write_to_file(1, 0, &file, &last_line);
+    let last_line = file_lines.lines()
+                              .unwrap()
+                              .expect("because");
+    write_to_file(1, 0, &file, &last_line);
     Ok(())
 }
 
@@ -91,11 +91,11 @@ pub fn write_to_file(amount: i16,
 }
 
 use std::io;
-fn read_lines(file: &File)/* -> io::BufReader<&std::fs::File> */{
+fn read_lines(file: &File) -> io::BufReader<&std::fs::File> {
     let reader = io::BufReader::new(file);
-    for line in reader.lines() {
+    /*for line in reader.lines() {
         let l = line.unwrap();
         println!("{}", l);
-    }
-    //reader
+    }*/
+    reader
 }
