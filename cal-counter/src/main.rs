@@ -33,14 +33,17 @@ fn main() -> std::io::Result<()> {
                std::fs::File::create(&file_path);
         },
     };
+    let bfile = File::open(&file_path)?;
+    let file_lines = read_lines(&bfile);  
+    let mut lines_string = Vec::new();
+    for line in file_lines.lines().map_while(Result::ok) {
+        lines_string.push(line);    
+    }; 
     let mut file = std::fs::OpenOptions::new()
         .write(true)
-        .append(true)
-        .create(true)
-        .open(&file_path)?; 
-    let bfile = File::open(&file_path)?;
-    let file_lines = read_lines(&bfile);
-    write_to_file(1, 0, &file, file_lines.lines());
+        .truncate(true)
+        .open(&file_path)?;
+    write_to_file(1, 0, &file, lines_string);
     Ok(())
 }
 
@@ -49,7 +52,7 @@ use chrono::Utc;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
                      mut file: &File,
-                     lines: io::Lines<io::BufReader<&std::fs::File>>) {
+                     mut lines_string: Vec<String>) {
 
     let date = Utc::now().date_naive();
     let mut p = 0;
@@ -60,10 +63,6 @@ pub fn write_to_file(amount: i16,
         1 => c += amount,
         _ => f += amount,
     };
-    let mut lines_string = Vec::new();
-    for line in lines.map_while(Result::ok) {
-        lines_string.push(line);    
-    }; 
     let last_line = lines_string.pop().expect("gyat");
     let content: String = if date.to_string() == last_line[0..10] {   
         let change = match mac {
@@ -83,7 +82,8 @@ pub fn write_to_file(amount: i16,
                                 digit.to_string()),
         } 
     } else {
-        format!("{}p{}c{}f{}", 
+        format!("{}\n{}p{}c{}f{}", 
+            last_line,
             date.to_string(), 
             p.to_string(), 
             c.to_string(), 
