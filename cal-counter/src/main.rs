@@ -43,7 +43,7 @@ fn main() -> std::io::Result<()> {
         .write(true)
         .truncate(true)
         .open(&file_path)?;
-    write_to_file(1, 0, &file, lines_string);
+    write_to_file(1, 3, &file, lines_string);
     Ok(())
 }
 
@@ -58,10 +58,12 @@ pub fn write_to_file(amount: i16,
     let mut p = 0;
     let mut c = 0;
     let mut f = 0;
+    let mut cal = 0;
     match mac {
         0 => p += amount,
         1 => c += amount,
-        _ => f += amount,
+        2 => f += amount,
+        _ => cal += amount,
     };
     let last_line = lines_string.pop().expect("gyat");
     let content: String = if date.to_string() == last_line[0..10] {   
@@ -69,7 +71,7 @@ pub fn write_to_file(amount: i16,
             0 => last_line.chars().nth(11).unwrap(),
             1 => last_line.chars().nth(13).unwrap(),
             2 => last_line.chars().nth(15).unwrap(),
-            _ => '0',
+            _ => last_line.chars().nth(16).unwrap(),
         };
         let digit = change.to_digit(10).unwrap() as i16 + amount;
         match mac {
@@ -78,20 +80,24 @@ pub fn write_to_file(amount: i16,
             1 => format!("{}{}{}", last_line[0..13].to_string(),
                                  digit.to_string(),
                                  last_line[14..].to_string()),
-            _ => format!("{}{}", last_line[0..15].to_string(),
+            2 => format!("{}{}", last_line[0..15].to_string(),
                                 digit.to_string()),
+            _ => format!("{}{}", last_line[0..16].to_string(),
+                                 digit.to_string()),
         } 
     } else {
-        format!("{}\n{}p{}c{}f{}", 
+        format!("{}\n{}p{}c{}f{}{}", 
             last_line,
             date.to_string(), 
             p.to_string(), 
             c.to_string(), 
-            f.to_string())
+            f.to_string(),
+            cal.to_string())
     };
     for l in lines_string {
         file.write(format!("{}\n",l).as_bytes());
     }
+    println!("{}", calculate_calories(last_line).to_string());
     file.write(content.as_bytes());
 }
 
@@ -99,4 +105,17 @@ use std::io;
 fn read_lines(file: &File) -> io::BufReader<&std::fs::File> {
     let reader = io::BufReader::new(file);
     reader
+}
+
+fn calculate_calories(entry: String) -> f32 {
+    let mut result = 0.0; 
+    // handle edge cases
+    result += entry.chars().nth(11).unwrap().to_digit(10).unwrap() as f32
+        * 4.0;
+    result += entry.chars().nth(13).unwrap().to_digit(10).unwrap() as f32
+        * 4.0;
+    result += entry.chars().nth(15).unwrap().to_digit(10).unwrap() as f32
+        * 9.0;
+    result += entry.chars().nth(16).unwrap().to_digit(10).unwrap() as f32;
+    result
 }
