@@ -1,8 +1,28 @@
 use std::process::Command;
 use std::any::type_name_of_val;
 use std::io::prelude::*;
+use std::env;
 
 fn main() -> std::io::Result<()> {
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 3 { 
+        return Ok(()) 
+    };
+    //println!("{}", args.first().unwrap());
+    let a: u8 = match args[1].as_str() {
+        "p" => 0,
+        "c" => 1,
+        "f" => 2,
+        "cal" => 3,
+        _ => 4,
+
+    };
+    let b = if let Some(num) = 
+        args.last().unwrap().chars().nth(0).unwrap().to_digit(10) {
+            num as i16
+    } else {
+        11
+    };
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "echo macro"])
@@ -43,7 +63,7 @@ fn main() -> std::io::Result<()> {
         .write(true)
         .truncate(true)
         .open(&file_path)?;
-    write_to_file(1, 3, &file, lines_string);
+    write_to_file(b, a, &file, lines_string);
     Ok(())
 }
 
