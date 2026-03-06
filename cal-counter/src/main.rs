@@ -17,11 +17,16 @@ fn main() -> std::io::Result<()> {
         _ => 4,
 
     };
+    if a == 4 {
+        println!("Enter valid macronutrient");
+        return Ok(());
+    }
     let b = if let Some(num) = 
         args.last().unwrap().chars().nth(0).unwrap().to_digit(10) {
             num as i16
     } else {
-        11
+        println!("Enter a numerical value");
+        return Ok(());
     };
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
