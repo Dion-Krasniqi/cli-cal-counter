@@ -21,15 +21,10 @@ fn main() -> std::io::Result<()> {
     if a == 5 {
         println!("Enter valid macronutrient");
         return Ok(());
-    }
-    let b = if let Some(num) = 
-        args.last().unwrap().chars().nth(0).unwrap().to_digit(10) {
-            num as i16
-    } else {
-        println!("Enter a numerical value");
-        return Ok(());
     };
-
+    if a == 4 {
+        // perform some checks per last arg
+    };
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "echo macro"])
@@ -67,9 +62,16 @@ fn main() -> std::io::Result<()> {
         lines_string.push(line);    
     }; 
     if a == 4 {
-        calculate_specific_total("2026-03-03".to_string(), lines_string);
+        calculate_specific_total(args.last().unwrap(), lines_string);
         return Ok(());
     }
+    let b = if let Some(num) = 
+            args.last().unwrap().chars().nth(0).unwrap().to_digit(10) {
+                num as i16
+    } else {
+            println!("Enter a numerical value");
+            return Ok(());
+     };
 
     write_to_file(b, a, &file_path, lines_string);
     Ok(())
@@ -153,6 +155,21 @@ fn calculate_calories(entry: String) -> f32 {
     result
 }
 
-pub fn calculate_specific_total(date: String,
+pub fn calculate_specific_total(date: &String,
                                 mut lines: Vec<String>
-) {}
+) {
+    let mut line = "None".to_string();    
+    for l in lines {
+        if l[0..10] == *date {
+            println!("Found");
+            line = l.clone();
+            break;
+        }
+    };
+    if line == "None" {
+        println!("{}", line);
+    } else {
+        println!("{}", calculate_calories(line).to_string());
+    }
+
+}
