@@ -14,10 +14,11 @@ fn main() -> std::io::Result<()> {
         "c" => 1,
         "f" => 2,
         "cal" => 3,
-        _ => 4,
-
+        "tot" => 4,
+        _ => 5
     };
-    if a == 4 {
+
+    if a == 5 {
         println!("Enter valid macronutrient");
         return Ok(());
     }
@@ -28,6 +29,7 @@ fn main() -> std::io::Result<()> {
         println!("Enter a numerical value");
         return Ok(());
     };
+
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "echo macro"])
@@ -64,11 +66,12 @@ fn main() -> std::io::Result<()> {
     for line in file_lines.lines().map_while(Result::ok) {
         lines_string.push(line);    
     }; 
-    let mut file = std::fs::OpenOptions::new()
-        .write(true)
-        .truncate(true)
-        .open(&file_path)?;
-    write_to_file(b, a, &file, lines_string);
+    if a == 4 {
+        calculate_specific_total("2026-03-03".to_string(), lines_string);
+        return Ok(());
+    }
+
+    write_to_file(b, a, &file_path, lines_string);
     Ok(())
 }
 
@@ -76,9 +79,13 @@ use std::fs::File;
 use chrono::Utc;
 pub fn write_to_file(amount: i16, 
                      mac: u8,
-                     mut file: &File,
-                     mut lines_string: Vec<String>) {
-
+                     mut file_path: &str,
+                     mut lines_string: Vec<String>) -> io::Result<()> {
+    
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&file_path)?;
     let date = Utc::now().date_naive();
     let mut p = 0;
     let mut c = 0;
@@ -124,6 +131,7 @@ pub fn write_to_file(amount: i16,
     }
     println!("{}", calculate_calories(last_line).to_string());
     file.write(content.as_bytes());
+    Ok(())
 }
 
 use std::io;
@@ -144,3 +152,7 @@ fn calculate_calories(entry: String) -> f32 {
     result += entry.chars().nth(16).unwrap().to_digit(10).unwrap() as f32;
     result
 }
+
+pub fn calculate_specific_total(date: String,
+                                mut lines: Vec<String>
+) {}
