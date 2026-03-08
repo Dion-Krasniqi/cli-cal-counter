@@ -6,6 +6,7 @@ use std::env;
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
     
+    let mut diff = false;
     if args.len() <= 2 {
         return Ok(())
     }
@@ -16,6 +17,7 @@ fn main() -> std::io::Result<()> {
         } else {
             if let Ok(dt) = chrono::NaiveDate::parse_from_str(
                 args[3].as_str(), "%Y-%m-%d") {
+                diff = true;
             } else {
                 println!("Enter valid date");
                 return Ok(())
@@ -36,16 +38,17 @@ fn main() -> std::io::Result<()> {
         println!("Enter valid macronutrient or command");
         return Ok(());
     };
+
     if a == 4 {
         if args[2].as_str() != "all" {
             if let Ok(_) = chrono::NaiveDate::parse_from_str(
-                args[2].as_str(), "%Y-%m-%d") {
-                // run the stuff
+                args[2].as_str(), "%Y-%m-%d") {                
             } else {
                 return Ok(())
             }
         }
     };
+
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", "echo macro"])
@@ -65,6 +68,8 @@ fn main() -> std::io::Result<()> {
         "Command failed".to_string()
     };
     println!("{}", &hello);
+    
+
     let curr_path = std::env::current_dir()
         .expect("Failed to get working dir");
     let dir_path = format!("{}/data", curr_path.display());
@@ -83,7 +88,12 @@ fn main() -> std::io::Result<()> {
         lines_string.push(line);    
     }; 
     if a == 4 {
-        calculate_specific_total(args.last().unwrap(), lines_string);
+        if args[2] == "all" {
+            println!("Total calories: {}", 
+                calculate_total_calories(lines_string).to_string());
+            return Ok(())
+        }
+        calculate_specific_total(&args[2], lines_string);
         return Ok(());
     }
     let b = if let Some(num) = 
@@ -93,8 +103,11 @@ fn main() -> std::io::Result<()> {
             println!("Enter a numerical value");
             return Ok(());
      };
-
-    write_to_file(b, a, &file_path, lines_string);
+    if !(diff) {
+        write_to_file(b, a, &file_path, lines_string);
+    } else {
+        write_diff_to_file(b, a, &file_path, lines_string);    
+    }
     Ok(())
 }
 
@@ -157,6 +170,14 @@ pub fn write_to_file(amount: i16,
     Ok(())
 }
 
+pub fn write_diff_to_file(amount: i16,
+                          mac: u8,
+                          mut file_path: &str,
+                          mut lines: Vec<String>,
+) -> io::Result<()> {
+    Ok(())
+}
+
 use std::io;
 fn read_lines(file: &File) -> io::BufReader<&std::fs::File> {
     let reader = io::BufReader::new(file);
@@ -192,5 +213,12 @@ pub fn calculate_specific_total(date: &String,
     } else {
         println!("{}", calculate_calories(line).to_string());
     }
+}
 
+pub fn calculate_total_calories(lines: Vec<String>) -> f32 {
+    let mut total = 0.0;
+    for line in lines {
+       total += calculate_calories(line);
+    };
+    return total
 }
