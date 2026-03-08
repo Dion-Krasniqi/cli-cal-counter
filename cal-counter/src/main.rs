@@ -5,25 +5,46 @@ use std::env;
 
 fn main() -> std::io::Result<()> {
     let args: Vec<String> = env::args().collect();
-    if args.len() > 3 { 
-        return Ok(()) 
+    
+    if args.len() <= 2 {
+        return Ok(())
+    }
+    if args.len() >= 4 { 
+        if args.last().expect("cuz").len() != 10 {
+            println!("Enter valid date");
+            return Ok(()) 
+        } else {
+            if let Ok(dt) = chrono::NaiveDate::parse_from_str(
+                args[3].as_str(), "%Y-%m-%d") {
+            } else {
+                println!("Enter valid date");
+                return Ok(())
+            }
+        }
     };
-    //println!("{}", args.first().unwrap());
+
     let a: u8 = match args[1].as_str() {
         "p" => 0,
         "c" => 1,
         "f" => 2,
         "cal" => 3,
         "tot" => 4,
-        _ => 5
+        _ => 5,
     };
 
-    if a == 5 {
-        println!("Enter valid macronutrient");
+    if a == 6 {
+        println!("Enter valid macronutrient or command");
         return Ok(());
     };
     if a == 4 {
-        // perform some checks per last arg
+        if args[2].as_str() != "all" {
+            if let Ok(_) = chrono::NaiveDate::parse_from_str(
+                args[2].as_str(), "%Y-%m-%d") {
+                // run the stuff
+            } else {
+                return Ok(())
+            }
+        }
     };
     let output = if cfg!(target_os = "windows") {
         Command::new("cmd")
