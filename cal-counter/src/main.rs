@@ -175,6 +175,19 @@ pub fn write_diff_to_file(amount: i16,
                           mut file_path: &str,
                           mut lines: Vec<String>,
 ) -> io::Result<()> {
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .truncate(true)
+        .open(&file_path)?;
+    
+    for l in lines {
+        if l[0..10] != "2026-03-03".to_string() {
+            file.write(l.as_bytes());
+            file.write("\n".as_bytes());
+        } else {
+            file.write("oops".as_bytes());
+        }
+    }   
     Ok(())
 }
 
