@@ -106,7 +106,7 @@ fn main() -> std::io::Result<()> {
     if !(diff) {
         write_to_file(b, a, &file_path, lines_string);
     } else {
-        write_diff_to_file(b, a, &file_path, lines_string);    
+        write_diff_to_file(b, a, &file_path, lines_string, args[3].clone());    
     }
     Ok(())
 }
@@ -148,8 +148,8 @@ pub fn write_to_file(amount: i16,
             1 => format!("{}{}{}", last_line[0..13].to_string(),
                                  digit.to_string(),
                                  last_line[14..].to_string()),
-            2 => format!("{}{}", last_line[0..15].to_string(),
-                                digit.to_string()),
+            2 => format!("{}{}{}", last_line[0..15].to_string(),
+                                digit.to_string(), last_line[16..].to_string()),
             _ => format!("{}{}", last_line[0..16].to_string(),
                                  digit.to_string()),
         } 
@@ -174,6 +174,7 @@ pub fn write_diff_to_file(amount: i16,
                           mac: u8,
                           mut file_path: &str,
                           mut lines: Vec<String>,
+                          date: String
 ) -> io::Result<()> {
     let mut file = std::fs::OpenOptions::new()
         .write(true)
@@ -181,11 +182,31 @@ pub fn write_diff_to_file(amount: i16,
         .open(&file_path)?;
     
     for l in lines {
-        if l[0..10] != "2026-03-03".to_string() {
+        if l[0..10] != date {
             file.write(l.as_bytes());
             file.write("\n".as_bytes());
         } else {
-            file.write("oops".as_bytes());
+	   
+    	    let change = match mac {
+            	0 => l.chars().nth(11).unwrap(),
+            	1 => l.chars().nth(13).unwrap(),
+            	2 => l.chars().nth(15).unwrap(),
+            	_ => l.chars().nth(16).unwrap(),
+            };
+            let digit = change.to_digit(10).unwrap() as i16 + amount;
+            let line = match mac {
+            	0 => format!("{}p{}{}", date.to_string(), 
+                	  digit.to_string(), l[12..].to_string()),
+            	1 => format!("{}{}{}", l[0..13].to_string(),
+                                 digit.to_string(),
+                                 l[14..].to_string()),
+            	2 => format!("{}{}{}", l[0..15].to_string(),
+                                digit.to_string(), l[16..].to_string()),
+            	_ => format!("{}{}", l[0..16].to_string(),
+                                 digit.to_string()),
+            }; 
+            file.write(line.as_bytes());
+            file.write("\n".as_bytes());
         }
     }   
     Ok(())
